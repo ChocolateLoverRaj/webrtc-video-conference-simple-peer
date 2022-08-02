@@ -1,0 +1,86 @@
+<html>
+
+<body>
+  <style>
+    #outgoing {
+      width: 600px;
+      word-wrap: break-word;
+      white-space: normal;
+    }
+  </style>
+  <form>
+    <textarea id="incoming"></textarea>
+    <button type="submit">submit</button>
+  </form>
+  <textarea id="outgoing" readonly></textarea><button id="copy">Copy</button>
+  <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.1/simplepeer.min.js"
+    integrity="sha256-3oMweWrndCdkkax5au1C6gFBze9D5G6Q3t0kmaXRs+E=" crossorigin="anonymous"></script>
+  <script type="module">
+    import trimNewlines from 'https://cdn.jsdelivr.net/npm/trim-newlines@4.0.2/index.js'
+
+    const p = new SimplePeer({
+      initiator: location.hash === '#1',
+      trickle: false,
+      config: {
+        // Using From https://www.metered.ca/tools/openrelay/
+        "iceServers": [
+          {
+            urls: "stun:openrelay.metered.ca:80"
+          },
+          {
+            urls: "turn:openrelay.metered.ca:80",
+            username: "openrelayproject",
+            credential: "openrelayproject"
+          },
+          {
+            urls: "turn:openrelay.metered.ca:443",
+            username: "openrelayproject",
+            credential: "openrelayproject"
+          },
+          {
+            urls: "turn:openrelay.metered.ca:443?transport=tcp",
+            username: "openrelayproject",
+            credential: "openrelayproject"
+          }
+        ]
+      }
+    })
+
+    p.on('error', err => console.log('error', err))
+
+    p.on('signal', data => {
+      console.log('SIGNAL', JSON.stringify(data))
+      document.querySelector('#outgoing').textContent = JSON.stringify(data)
+    })
+
+    document.querySelector('form').addEventListener('submit', ev => {
+      ev.preventDefault()
+      p.signal(JSON.parse(trimNewlines(document.querySelector('#incoming').value)))
+    })
+
+    p.on('connect', () => {
+      console.log('CONNECT')
+      const sendData = Math.floor(Math.random() * 256)
+      p.send(new Uint8Array([sendData]))
+      alert('Sent data: ' + sendData)
+    })
+
+    p.on('data', data => {
+      console.log('data: ', data)
+      alert(`Got data: ${data[0]}`)
+    })
+
+    const outgoing = document.getElementById('outgoing')
+    const copyButton = document.getElementById('copy')
+    copyButton.addEventListener('click', ({ target }) => {
+      /* Select the text field */
+      outgoing.select()
+      outgoing.setSelectionRange(0, 99999) /* For mobile devices */
+
+      /* Copy the text inside the text field */
+      navigator.clipboard.writeText(outgoing.value)
+    })
+  </script>
+</body>
+
+</html>
