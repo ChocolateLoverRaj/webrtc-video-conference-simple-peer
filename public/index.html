@@ -1,5 +1,9 @@
 <html>
 
+<head>
+  <title>P2P Demo</title>
+</head>
+
 <body>
   <style>
     #outgoing {
@@ -80,6 +84,10 @@
       /* Copy the text inside the text field */
       navigator.clipboard.writeText(outgoing.value)
     })
+  </script>
+  <!-- https://docs.pwabuilder.com/#/studio/existing-app?id=add-a-service-worker -->
+  <script>
+    navigator.serviceWorker.register("./sw.js")
   </script>
 </body>
 
